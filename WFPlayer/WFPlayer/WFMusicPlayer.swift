@@ -73,11 +73,68 @@ open class WFMusicPlayer: NSObject {
         return player
     }()
     
+    /// AVPlayerItem提供了AVPlayer播放需要的媒体文件，时间、状态、文件大小等信息，是AVPlayer媒体文件的载体
+    var playerItem:AVPlayerItem?
+    
+    var asset:AVURLAsset?
+    
+    /// 当前播放时间进度
+    var currtenTime: CMTime? {
+        
+        get {
+            return self.playerItem?.currentTime()
+        }
+    }
+    
+    
     
     
     
     
 }
+
+extension WFMusicPlayer {
+    
+    
+}
+
+// kvo 监听 AVPlayerItem属性变化
+extension WFMusicPlayer {
+    
+    func addObserver(to playerItem: AVPlayerItem) {
+        
+         //监控状态属性
+        playerItem.addObserver(self, forKeyPath: ObserverKeyPath.status, options: NSKeyValueObservingOptions.new, context: nil)
+        //监控网络加载情况属性
+        playerItem.addObserver(self, forKeyPath: ObserverKeyPath.loadedTimeRanges, options: NSKeyValueObservingOptions.new, context: nil)
+        //监听播放的区域缓存是否为空
+        playerItem.addObserver(self, forKeyPath: ObserverKeyPath.playbackBufferEmpty, options: NSKeyValueObservingOptions.new, context: nil)
+        //缓存可以播放的时候调用
+        playerItem.addObserver(self, forKeyPath: ObserverKeyPath.playbackLikelyToKeepUp, options: NSKeyValueObservingOptions.new, context: nil)
+    }
+        
+    func removeObserver(from playerItem:AVPlayerItem) {
+        
+        playerItem.removeObserver(self, forKeyPath: ObserverKeyPath.status)
+        playerItem.removeObserver(self, forKeyPath: ObserverKeyPath.loadedTimeRanges)
+        playerItem.removeObserver(self, forKeyPath: ObserverKeyPath.playbackBufferEmpty)
+        playerItem.removeObserver(self, forKeyPath: ObserverKeyPath.playbackLikelyToKeepUp)
+    }
+    
+    override open func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        switch keyPath! {
+        case ObserverKeyPath.status:
+            let status = change?[NSKeyValueChangeKey.newKey] as! AVPlayerItem.Status
+            if status == AVPlayerItem.Status.readyToPlay {
+                
+            }
+        case ObserverKeyPath.loadedTimeRanges: break
+        default: break
+            
+        }
+    }
+}
+
 
 /**
 播放器监听
