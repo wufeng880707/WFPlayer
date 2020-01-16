@@ -329,7 +329,7 @@ extension WFMusicPlayer {
                 } else {
                     
                     // 如果此时用户已经暂停了，则不再需要开启播放了
-                    self.delegate?.wfMusicPlayer(musicPlayer: self, playerStateDidChange: WFMusicPlayerState.bufferFinished)
+                    self.state = WFMusicPlayerState.bufferFinished
                 }
             }
         }
