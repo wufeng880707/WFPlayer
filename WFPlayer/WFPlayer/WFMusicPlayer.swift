@@ -82,30 +82,30 @@ open class WFMusicPlayer: NSObject {
     /// 播放类型
     var playerMode : WFMusicPlayerMode?
     /// 播放器类
-    lazy var musicPlayer: AVPlayer = {
+    open lazy var musicPlayer: AVPlayer = {
         
         let player = AVPlayer()
         return player
     }()
     
+    /// 播放列表
+    open var musicArray = [MusicData]()
 //    /// AVPlayerItem提供了AVPlayer播放需要的媒体文件，时间、状态、文件大小等信息，是AVPlayer媒体文件的载体
 //    var playerItem:AVPlayerItem?
     
     /// AVURLAsset: AVAsset的子类，可以根据一个URL路径创建一个包含媒体信息的AVURLAsset对象
     fileprivate var urlAsset:AVURLAsset?
-    /// 播放列表
-    var musicArray = [MusicData]()
     /// 当前播放下标
     var currentIndex: Int = 0
     /// 总共时间
-    var totalTime: CMTime? {
+    open var totalTime: CMTime? {
         get {
             return self.musicPlayer.currentItem?.duration
         }
     }
     
     /// 当前播放时间
-    var currentPlayTime: CMTime? {
+    open var currentPlayTime: CMTime? {
         get {
             return self.musicPlayer.currentItem?.currentTime()
         }
@@ -118,7 +118,7 @@ open class WFMusicPlayer: NSObject {
     /// 当前播放歌曲的进度
     var playProgress: Float = 0.0
     /// 拖动进度条控制播放进度
-    var sliderValue: Float = 0.0 {
+    open var sliderValue: Float = 0.0 {
         didSet {
             let total = CMTimeGetSeconds(self.musicPlayer.currentItem!.duration)
             let seconds = total * Float64(sliderValue)
@@ -151,7 +151,7 @@ extension WFMusicPlayer {
 
     /// 开始播放通过
     /// - Parameter url: 文件地址
-    func play(_ url:URL) {
+    open func play(_ url:URL) {
         
         self.removeObserver()
         self.urlAsset = AVURLAsset(url: url)
@@ -166,19 +166,19 @@ extension WFMusicPlayer {
     }
     
     /// 开始播放
-    func play() {
+    open func play() {
         
         self.musicPlayer.play()
     }
     
     /// 暂停
-    func pause() {
+    open func pause() {
         
         self.musicPlayer.pause()
     }
     
     /// 上一首
-    func playPrevious() {
+    open func playPrevious() {
         
         if self.currentIndex == 0 {
             
@@ -195,7 +195,7 @@ extension WFMusicPlayer {
         self.play(URL.init(string: music.musicUrl!)!)
     }
     
-    func playNext() {
+    open func playNext() {
         
         if self.currentIndex == self.musicArray.count - 1 {
             
@@ -213,7 +213,7 @@ extension WFMusicPlayer {
         self.play(URL.init(string: music.musicUrl!)!)
     }
     
-    func currentPlayData() -> MusicData {
+    open func currentPlayData() -> MusicData {
         
         let music = self.musicArray[self.currentIndex]
         return music
@@ -224,19 +224,22 @@ extension WFMusicPlayer {
 // kvo 监听 AVPlayerItem属性变化
 extension WFMusicPlayer {
     
-    func addObserver() {
+    open func addObserver() {
         
-         //监控状态属性
-        self.musicPlayer.currentItem?.addObserver(self, forKeyPath: ObserverKeyPath.status, options: NSKeyValueObservingOptions.new, context: nil)
-        //监控网络加载情况属性
-        self.musicPlayer.currentItem?.addObserver(self, forKeyPath: ObserverKeyPath.loadedTimeRanges, options: NSKeyValueObservingOptions.new, context: nil)
-        //监听播放的区域缓存是否为空
-        self.musicPlayer.currentItem?.addObserver(self, forKeyPath: ObserverKeyPath.playbackBufferEmpty, options: NSKeyValueObservingOptions.new, context: nil)
-        //缓存可以播放的时候调用
-        self.musicPlayer.currentItem?.addObserver(self, forKeyPath: ObserverKeyPath.playbackLikelyToKeepUp, options: NSKeyValueObservingOptions.new, context: nil)
+        if self.musicPlayer.currentItem != nil {
+            
+            //监控状态属性
+            self.musicPlayer.currentItem?.addObserver(self, forKeyPath: ObserverKeyPath.status, options: NSKeyValueObservingOptions.new, context: nil)
+            //监控网络加载情况属性
+            self.musicPlayer.currentItem?.addObserver(self, forKeyPath: ObserverKeyPath.loadedTimeRanges, options: NSKeyValueObservingOptions.new, context: nil)
+            //监听播放的区域缓存是否为空
+            self.musicPlayer.currentItem?.addObserver(self, forKeyPath: ObserverKeyPath.playbackBufferEmpty, options: NSKeyValueObservingOptions.new, context: nil)
+            //缓存可以播放的时候调用
+            self.musicPlayer.currentItem?.addObserver(self, forKeyPath: ObserverKeyPath.playbackLikelyToKeepUp, options: NSKeyValueObservingOptions.new, context: nil)
+        }
     }
         
-    func removeObserver() {
+    open func removeObserver() {
         
         self.musicPlayer.currentItem?.removeObserver(self, forKeyPath: ObserverKeyPath.status)
         self.musicPlayer.currentItem?.removeObserver(self, forKeyPath: ObserverKeyPath.loadedTimeRanges)
@@ -244,7 +247,7 @@ extension WFMusicPlayer {
         self.musicPlayer.currentItem?.removeObserver(self, forKeyPath: ObserverKeyPath.playbackLikelyToKeepUp)
     }
     
-    override open func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
         if let item = object as? AVPlayerItem, let keyPath = keyPath {
             
@@ -274,6 +277,8 @@ extension WFMusicPlayer {
                         let totalDuration = CMTimeGetSeconds(duration)
                         let loadProgress = timeInterVarl/totalDuration
                         let currentTimeStr = changeStringForTime(timeInterval: timeInterVarl)
+                        
+                        print("---")
                         delegate?.wfMusicPlayer(musicPlayer: self, updateProgress: Float(loadProgress), currentTime: timeInterVarl, currentTimeStr: currentTimeStr)
                     }
                 case ObserverKeyPath.playbackBufferEmpty:
