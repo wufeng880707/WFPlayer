@@ -12,21 +12,31 @@ import MediaPlayer
 /**
  播放器播放状态 emun
  
- - notSetURL:           没有URL
- - readyToPlay:         准备播放的播放器
- - buffering:               播放器缓冲
- - bufferFinished:      缓冲区完成
- - playedToTheEnd:  播放到结尾
- - error:                      播放错误
+ - notSetURL:                           没有URL
+ - preparing:                              准备播放
+ - beigin:                                   开始播放
+ - playing:                                 正在播放
+ - pause:                                   播放暂停
+ - end:                                       播放结束
+ - bufferEmpty:                         没有缓存的数据供播放了
+ - bufferToKeepUp:                   有缓存的数据可以供播放
+ - seekToZeroBeforePlay:        播放器缓冲
+ - notPlay:                                 不能播放
+ - notKnow:                               未知情况
  */
 public enum WFMusicPlayerState {
     
     case notSetURL
-    case readyToPlay
-    case buffering
-    case bufferFinished
-    case playedToTheEnd
-    case error
+    case preparing
+    case beigin
+    case playing
+    case pause
+    case end
+    case bufferEmpty
+    case bufferToKeepUp
+    case seekToZeroBeforePlay
+    case notPlay
+    case notKnow
 }
 
 /**
@@ -47,49 +57,44 @@ public enum WFMusicPlayerMode {
 public protocol WFMusicPlayerDelegate: class {
     
     /// 播放状态
-    /// - Parameter musicPlayer: 当前播放器对象
     /// - Parameter state: 播放状态
-    func wfMusicPlayer(musicPlayer: WFMusicPlayer, playerStateDidChange state: WFMusicPlayerState)
+    func wfMusicPlayer(playerStateDidChange state: WFMusicPlayerState)
     
     /// 更新播放进度、播放时间
-    /// - Parameter musicPlayer: 当前播放器对象
     /// - Parameter progress: 播放进度
     /// - Parameter currentTime: 当前播放时间
     /// - Parameter currentTimeStr: 当前播放时间字符串
-    func wfMusicPlayer(musicPlayer: WFMusicPlayer, updateProgress progress: Float, currentTime: TimeInterval, currentTimeStr: String?)
+    func wfMusicPlayer(updateProgress progress: Float, currentTime: TimeInterval, currentTimeStr: String?)
     
     /// 更新加载进度、结束时间
-    /// - Parameter musicPlayer: 当前播放器对象
     /// - Parameter progress: 加载进度
     /// - Parameter duration: 结束时间
     /// - Parameter totalTime: 结束时间字符串
-    func wfMusicPlayer(musicPlayer: WFMusicPlayer, updateLoadProgress progress: Float, duration: TimeInterval, totalTime: String)
+    func wfMusicPlayer(updateLoadProgress progress: Float, duration: TimeInterval, totalTime: String)
     
     /// 是否在播放
-    /// - Parameter musicPlayer: 当前播放器对象
     /// - Parameter playing: bool
-    func wfMusicPlayer(musicPlayer: WFMusicPlayer, playerIsPlaying playing: Bool)
+    func wfMusicPlayer(playerIsPlaying playing: Bool)
     
     /// 当前播放 数据
-    /// - Parameter musicPlayer: 当前播放器对象
     /// - Parameter playData: 当前播放 数据
-    func wfMusicPlayer(musicPlayer: WFMusicPlayer, playerCurrentPlayData playData: MusicData)
+    func wfMusicPlayer(playerCurrentPlayData playData: MusicData)
 }
 
-open class WFMusicPlayer: NSObject {
+class WFMusicPlayer: NSObject {
 
-    open weak var delegate: WFMusicPlayerDelegate?
+    weak var delegate: WFMusicPlayerDelegate?
     /// 播放类型
     var playerMode : WFMusicPlayerMode?
     /// 播放器类
-    open lazy var musicPlayer: AVPlayer = {
+    var musicPlayer: AVPlayer = {
         
         let player = AVPlayer()
         return player
     }()
     
     /// 播放列表
-    open var musicArray = [MusicData]()
+    var musicArray = [MusicData]()
 //    /// AVPlayerItem提供了AVPlayer播放需要的媒体文件，时间、状态、文件大小等信息，是AVPlayer媒体文件的载体
 //    var playerItem:AVPlayerItem?
     
@@ -98,14 +103,14 @@ open class WFMusicPlayer: NSObject {
     /// 当前播放下标
     var currentIndex: Int = 0
     /// 总共时间
-    open var totalTime: CMTime? {
+    var totalTime: CMTime? {
         get {
             return self.musicPlayer.currentItem?.duration
         }
     }
     
     /// 当前播放时间
-    open var currentPlayTime: CMTime? {
+    var currentPlayTime: CMTime? {
         get {
             return self.musicPlayer.currentItem?.currentTime()
         }
@@ -118,7 +123,7 @@ open class WFMusicPlayer: NSObject {
     /// 当前播放歌曲的进度
     var playProgress: Float = 0.0
     /// 拖动进度条控制播放进度
-    open var sliderValue: Float = 0.0 {
+    var sliderValue: Float = 0.0 {
         didSet {
             let total = CMTimeGetSeconds(self.musicPlayer.currentItem!.duration)
             let seconds = total * Float64(sliderValue)
@@ -132,7 +137,7 @@ open class WFMusicPlayer: NSObject {
     fileprivate var state = WFMusicPlayerState.notSetURL {
         didSet {
             if state != oldValue {
-                delegate?.wfMusicPlayer(musicPlayer: self, playerStateDidChange: state)
+                delegate?.wfMusicPlayer(playerStateDidChange: state)
             }
         }
     }
@@ -151,7 +156,7 @@ extension WFMusicPlayer {
 
     /// 开始播放通过
     /// - Parameter url: 文件地址
-    open func play(_ url:URL) {
+    func play(_ url:URL) {
         
         self.removeObserver()
         self.urlAsset = AVURLAsset(url: url)
@@ -159,26 +164,27 @@ extension WFMusicPlayer {
         let playerItem = AVPlayerItem(asset: self.urlAsset!)
         self.musicPlayer.replaceCurrentItem(with: playerItem)
         self.addObserver()
+
         if self.musicArray.count > 0 {
             
-            delegate?.wfMusicPlayer(musicPlayer: self, playerCurrentPlayData: self.musicArray[self.currentIndex])
+            delegate?.wfMusicPlayer(playerCurrentPlayData: self.musicArray[self.currentIndex])
         }
     }
     
     /// 开始播放
-    open func play() {
+    func play() {
         
         self.musicPlayer.play()
     }
     
     /// 暂停
-    open func pause() {
+    func pause() {
         
         self.musicPlayer.pause()
     }
     
     /// 上一首
-    open func playPrevious() {
+    func playPrevious() {
         
         if self.currentIndex == 0 {
             
@@ -195,7 +201,7 @@ extension WFMusicPlayer {
         self.play(URL.init(string: music.musicUrl!)!)
     }
     
-    open func playNext() {
+    func playNext() {
         
         if self.currentIndex == self.musicArray.count - 1 {
             
@@ -213,18 +219,17 @@ extension WFMusicPlayer {
         self.play(URL.init(string: music.musicUrl!)!)
     }
     
-    open func currentPlayData() -> MusicData {
+    func currentPlayData() -> MusicData {
         
         let music = self.musicArray[self.currentIndex]
         return music
     }
-    
 }
 
 // kvo 监听 AVPlayerItem属性变化
 extension WFMusicPlayer {
     
-    open func addObserver() {
+    func addObserver() {
         
         if self.musicPlayer.currentItem != nil {
             
@@ -239,7 +244,7 @@ extension WFMusicPlayer {
         }
     }
         
-    open func removeObserver() {
+    func removeObserver() {
         
         self.musicPlayer.currentItem?.removeObserver(self, forKeyPath: ObserverKeyPath.status)
         self.musicPlayer.currentItem?.removeObserver(self, forKeyPath: ObserverKeyPath.loadedTimeRanges)
@@ -247,7 +252,7 @@ extension WFMusicPlayer {
         self.musicPlayer.currentItem?.removeObserver(self, forKeyPath: ObserverKeyPath.playbackLikelyToKeepUp)
     }
     
-    open override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
         if let item = object as? AVPlayerItem, let keyPath = keyPath {
             
@@ -259,7 +264,7 @@ extension WFMusicPlayer {
                     
                     if item.status == AVPlayerItem.Status.failed || self.musicPlayer.status == AVPlayer.Status.failed {
                         
-                        self.state = WFMusicPlayerState.error
+                        self.state = WFMusicPlayerState.notKnow
                     }
                     else if status == AVPlayerItem.Status.readyToPlay {
                         
@@ -279,7 +284,7 @@ extension WFMusicPlayer {
                         let currentTimeStr = changeStringForTime(timeInterval: timeInterVarl)
                         
                         print("---")
-                        delegate?.wfMusicPlayer(musicPlayer: self, updateProgress: Float(loadProgress), currentTime: timeInterVarl, currentTimeStr: currentTimeStr)
+                        delegate?.wfMusicPlayer(updateProgress: Float(loadProgress), currentTime: timeInterVarl, currentTimeStr: currentTimeStr)
                     }
                 case ObserverKeyPath.playbackBufferEmpty:
                     if self.musicPlayer.currentItem!.isPlaybackBufferEmpty {
@@ -288,8 +293,8 @@ extension WFMusicPlayer {
                     }
                 case ObserverKeyPath.playbackLikelyToKeepUp:
                     if self.musicPlayer.currentItem!.isPlaybackBufferEmpty {
-                        if state != WFMusicPlayerState.bufferFinished {
-                            self.state = .bufferFinished
+                        if state != WFMusicPlayerState.bufferEmpty {
+                            self.state = WFMusicPlayerState.bufferEmpty
                         }
                     }
                 default: break
@@ -334,7 +339,7 @@ extension WFMusicPlayer {
                 } else {
                     
                     // 如果此时用户已经暂停了，则不再需要开启播放了
-                    self.state = WFMusicPlayerState.bufferFinished
+                    self.state = WFMusicPlayerState.bufferEmpty
                 }
             }
         }

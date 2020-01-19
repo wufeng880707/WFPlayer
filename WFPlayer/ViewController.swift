@@ -14,6 +14,13 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
+        
+        
+    }
+
+    
+    @IBAction func startClick(_ sender: Any) {
+        
         let musicPlayer = WFMusicPlayer()
         
         var musicDataList = [MusicData]()
@@ -26,8 +33,6 @@ class ViewController: UIViewController {
         musicPlayer.play(URL.init(string: musicD.musicUrl!)!)
         
     }
-
-    
     
     
    
