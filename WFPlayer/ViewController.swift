@@ -21,15 +21,23 @@ class ViewController: UIViewController {
     
     @IBAction func startClick(_ sender: Any) {
         
-        let musicPlayer = WFMusicPlayer()
+//        let musicPlayer = WFMusicPlayer()
+//
+//        var musicDataList = [MusicData]()
+//
+        let musicD = MusicData(url: "http://m10.music.126.net/20200119172456/e4a645fcccd319980c7a73485722c075/ymusic/545e/065a/530b/c413a59407100320b8f9da233b35f938.mp3", name: "haha", singer: "我", album: "不知道", image: "http://p1.music.126.net/Ox7lGtp0WmTNJP-6nbpqIw==/2852133162457596.jpg", lyric: "")
+//
+//        musicDataList.append(musicD)
+//
+//        musicPlayer.musicArray = musicDataList
+//        musicPlayer.play(URL.init(string: musicD.musicUrl!)!)
         
-        var musicDataList = [MusicData]()
+//        let musicPlayer = WPY_AVPlayer.playManager
+//
+//        musicPlayer.playMusic(url: "http://m10.music.126.net/20200119172456/e4a645fcccd319980c7a73485722c075/ymusic/545e/065a/530b/c413a59407100320b8f9da233b35f938.mp3", type: WPY_AVPlayerType.PlayTypeLine)
         
-        let musicD = MusicData(url: "http://m10.music.126.net/20200117001343/c24cba1839f537886777572fab1826c5/ymusic/b1c4/b5de/74d0/9158ae4873e10b743790320db9ef9b29.mp3", name: "haha", singer: "我", album: "不知道", image: "http://p1.music.126.net/Ox7lGtp0WmTNJP-6nbpqIw==/2852133162457596.jpg", lyric: "")
+        let musicPlayer = WFMusicPlayer.sharedInstance
         
-        musicDataList.append(musicD)
-        
-        musicPlayer.musicArray = musicDataList
         musicPlayer.play(URL.init(string: musicD.musicUrl!)!)
         
     }

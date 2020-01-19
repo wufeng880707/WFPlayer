@@ -8,6 +8,7 @@
 
 import UIKit
 import MediaPlayer
+import AVFoundation
 
 /**
  播放器播放状态 emun
@@ -82,46 +83,41 @@ public protocol WFMusicPlayerDelegate: class {
 }
 
 class WFMusicPlayer: NSObject {
-
+    
+    /// 单例
+    static let sharedInstance = WFMusicPlayer()
+    /// 代理
     weak var delegate: WFMusicPlayerDelegate?
-    /// 播放类型
-    var playerMode : WFMusicPlayerMode?
     /// 播放器类
     var musicPlayer: AVPlayer = {
         
         let player = AVPlayer()
         return player
     }()
-    
-    /// 播放列表
-    var musicArray = [MusicData]()
-//    /// AVPlayerItem提供了AVPlayer播放需要的媒体文件，时间、状态、文件大小等信息，是AVPlayer媒体文件的载体
-//    var playerItem:AVPlayerItem?
-    
+    /// AVPlayerItem提供了AVPlayer播放需要的媒体文件，时间、状态、文件大小等信息，是AVPlayer媒体文件的载体
+    var playerItem:AVPlayerItem?
     /// AVURLAsset: AVAsset的子类，可以根据一个URL路径创建一个包含媒体信息的AVURLAsset对象
     fileprivate var urlAsset:AVURLAsset?
+    /// 播放类型
+    var playerMode : WFMusicPlayerMode?
+    /// 播放列表
+    var musicArray = [MusicData]()
     /// 当前播放下标
     var currentIndex: Int = 0
-    /// 总共时间
-    var totalTime: CMTime? {
-        get {
-            return self.musicPlayer.currentItem?.duration
-        }
-    }
-    
-    /// 当前播放时间
-    var currentPlayTime: CMTime? {
-        get {
-            return self.musicPlayer.currentItem?.currentTime()
-        }
-    }
-    
+    /// 时长
+    var musicDuration: Float?
+    /// 当前播放歌曲的加载进度
+    var loadProgress: Float?
+    // 仅在bufferingSomeSecond里面使用  表示正在缓冲中
+    fileprivate var isBuffering = false
     /// 当前歌曲播放时间字符串
     var startTimeStr: String?
     /// 当前歌曲结束时间字符串
     var endTimeStr: String?
     /// 当前播放歌曲的进度
     var playProgress: Float = 0.0
+    /// 是否正在播放
+    var isPlay: Bool = false
     /// 拖动进度条控制播放进度
     var sliderValue: Float = 0.0 {
         didSet {
@@ -141,17 +137,41 @@ class WFMusicPlayer: NSObject {
             }
         }
     }
+    /// 总共时间
+    var totalTime: CMTime? {
+        get {
+            return self.musicPlayer.currentItem?.duration
+        }
+    }
+    /// 当前播放时间
+    var currentPlayTime: CMTime? {
+        get {
+            return self.musicPlayer.currentItem?.currentTime()
+        }
+    }
+    /// 应用是否进入后台
+    var isEnterBackground : Bool = false
+    /// 是否立即播放
+    var isImmediately : Bool = false
+    /// 后台播放申请ID
+    var bgTaskId : UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier.invalid
+    /// 播放速度    改变播放速度
+    var playSpeed : Float = 1.0 {
+        didSet{
+            if (self.isPlay){
+                guard let playerItem = self.playerItem else {return}
+                self.enableAudioTracks(enable: true, playerItem: playerItem)
+                self.musicPlayer.rate = playSpeed
+            }
+        }
+    }
     
-    /// 时长
-    var musicDuration: Float?
-    /// 当前播放歌曲的加载进度
-    var loadProgress: Float?
-    /// 是否暂停
-    var isPause: Bool?
-    // 仅在bufferingSomeSecond里面使用  表示正在缓冲中
-    fileprivate var isBuffering = false
+    var imageView = UIImageView() //为了设置锁屏封面
+    
+    
 }
 
+// MARK: -- 播放器基本方法 （停止、开始、下一首、上一首 等）
 extension WFMusicPlayer {
 
     /// 开始播放通过
@@ -224,9 +244,31 @@ extension WFMusicPlayer {
         let music = self.musicArray[self.currentIndex]
         return music
     }
+    
+    /// 改变播放速率  必实现的方法
+    ///
+    /// - Parameters:
+    ///   - enable:
+    ///   - playerItem: 当前播放
+    func enableAudioTracks(enable:Bool,playerItem : AVPlayerItem){
+        
+        for track : AVPlayerItemTrack in playerItem.tracks {
+            
+            if track.assetTrack?.mediaType == AVMediaType.audio {
+                
+                track.isEnabled = enable
+            }
+        }
+    }
 }
 
-// kvo 监听 AVPlayerItem属性变化
+// MARK: -- 系统想状态改变时处理方法
+extension WFMusicPlayer {
+    
+    
+}
+
+// MARK: -- kvo 监听 AVPlayerItem属性变化
 extension WFMusicPlayer {
     
     func addObserver() {
@@ -260,19 +302,18 @@ extension WFMusicPlayer {
                 
                 switch keyPath {
                 case ObserverKeyPath.status:
-                    let status = change?[NSKeyValueChangeKey.newKey] as! AVPlayerItem.Status
                     
-                    if item.status == AVPlayerItem.Status.failed || self.musicPlayer.status == AVPlayer.Status.failed {
+                    if item.status == AVPlayerItem.Status.failed {
                         
+                        self.state = WFMusicPlayerState.notPlay
+                    }
+                    else if item.status == AVPlayerItem.Status.readyToPlay  {
+                        
+                        
+                    }
+                    else if item.status == AVPlayerItem.Status.unknown {
+                                           
                         self.state = WFMusicPlayerState.notKnow
-                    }
-                    else if status == AVPlayerItem.Status.readyToPlay {
-                        
-                        
-                    }
-                    else if status == AVPlayerItem.Status.readyToPlay {
-                                           
-                                           
                     }
                 case ObserverKeyPath.loadedTimeRanges:
                     // 计算缓冲进度
@@ -354,8 +395,6 @@ extension WFMusicPlayer {
         return dateStr
     }
 }
-
-
 
 /**
 播放器监听
