@@ -98,8 +98,8 @@ class WFMusicPlayer: NSObject {
     var playerItem:AVPlayerItem?
     /// AVURLAsset: AVAsset的子类，可以根据一个URL路径创建一个包含媒体信息的AVURLAsset对象
     fileprivate var urlAsset:AVURLAsset?
-    /// 播放类型
-    var playerMode : WFMusicPlayerMode?
+    /// 播放类型 (默认s顺序播放)
+    var playerMode : WFMusicPlayerMode = .sequential
     /// 播放列表
     var musicArray = [MusicData]()
     /// 当前播放下标
@@ -165,8 +165,8 @@ class WFMusicPlayer: NSObject {
             }
         }
     }
-    
     var imageView = UIImageView() //为了设置锁屏封面
+    
     
     
 }
@@ -268,7 +268,7 @@ extension WFMusicPlayer {
     
 }
 
-// MARK: -- kvo 监听 AVPlayerItem属性变化
+// MARK: -- 通知、kvo 监听 AVPlayerItem属性变化
 extension WFMusicPlayer {
     
     func addObserver() {
@@ -283,6 +283,15 @@ extension WFMusicPlayer {
             self.musicPlayer.currentItem?.addObserver(self, forKeyPath: ObserverKeyPath.playbackBufferEmpty, options: NSKeyValueObservingOptions.new, context: nil)
             //缓存可以播放的时候调用
             self.musicPlayer.currentItem?.addObserver(self, forKeyPath: ObserverKeyPath.playbackLikelyToKeepUp, options: NSKeyValueObservingOptions.new, context: nil)
+            
+            //监听是否靠近耳朵
+            NotificationCenter.default.addObserver(self, selector: #selector(sensorStateChange), name:UIDevice.proximityStateDidChangeNotification, object: nil)
+            
+            //播放期间被 电话 短信 微信 等打断后的处理
+            NotificationCenter.default.addObserver(self, selector: #selector(handleInterreption(sender:)), name:AVAudioSession.interruptionNotification, object:AVAudioSession.sharedInstance())
+            
+            // 监控播放结束通知
+            NotificationCenter.default.addObserver(self, selector: #selector(playMusicFinished), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.musicPlayer.currentItem)
         }
     }
         
@@ -339,9 +348,63 @@ extension WFMusicPlayer {
                         }
                     }
                 default: break
-                    
                 }
             }
+        }
+    }
+    
+    /// 监测是否靠近耳朵  转换声音播放模式
+    @objc fileprivate func sensorStateChange() {
+        
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0) {
+            
+            if UIDevice.current.proximityState == true {
+                
+                // 靠近耳朵
+                do {
+                    try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playAndRecord, mode: .default, options: [])
+                } catch { }
+            }else {
+                
+                // 远离耳朵
+                do {
+                    try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback, mode: .default, options: [])
+                } catch { }
+            }
+        }
+    }
+    
+    /// 处理播放音频是被来电 或者 其他 打断音频的处理
+    /// - Parameter sender: NSNotification
+    @objc fileprivate func handleInterreption(sender: NSNotification) {
+        
+        let info = sender.userInfo
+        guard let type : AVAudioSession.InterruptionType =  info?[AVAudioSessionInterruptionTypeKey] as? AVAudioSession.InterruptionType else { return }
+        
+        if type == AVAudioSession.InterruptionType.began {
+            
+            self.pause()
+        }else {
+            guard  let options = info![AVAudioSessionInterruptionOptionKey] as? AVAudioSession.InterruptionOptions else {return}
+            
+            if(options == AVAudioSession.InterruptionOptions.shouldResume){
+                self.pause()
+            }
+        }
+    }
+    
+    /// 单个音频播放结束后的逻辑处理
+    @objc func playMusicFinished(){
+        
+        UIDevice.current.isProximityMonitoringEnabled = true
+        self.seekToZeroBeforePlay = true
+        self.isPlay = false
+        
+        self.updateCurrentPlayState(state: AVPlayerPlayState.AVPlayerPlayStateEnd)
+        
+        if (self.playType == WPY_AVPlayerType.PlayTypeSpecial) {
+            
+            self.next()
         }
     }
     
