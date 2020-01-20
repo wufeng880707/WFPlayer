@@ -17,7 +17,19 @@ class ViewController: UIViewController {
         
         
     }
-
+    @IBOutlet weak var sliderView: UISlider!
+        
+    @IBAction func next(_ sender: Any) {
+        
+    }
+    
+    @IBAction func previous(_ sender: Any) {
+        
+    }
+    
+    @IBAction func puse(_ sender: Any) {
+        
+    }
     
     @IBAction func startClick(_ sender: Any) {
         

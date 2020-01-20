@@ -94,6 +94,8 @@ class WFMusicPlayer: NSObject {
         let player = AVPlayer()
         return player
     }()
+    /// 当前播放数据
+    var currentMData : MusicData?
     /// AVPlayerItem提供了AVPlayer播放需要的媒体文件，时间、状态、文件大小等信息，是AVPlayer媒体文件的载体
     var playerItem:AVPlayerItem?
     /// AVURLAsset: AVAsset的子类，可以根据一个URL路径创建一个包含媒体信息的AVURLAsset对象
@@ -104,8 +106,6 @@ class WFMusicPlayer: NSObject {
     var musicArray = [MusicData]()
     /// 当前播放下标
     var currentIndex: Int = 0
-    /// 时长
-    var musicDuration: Float?
     /// 当前播放歌曲的加载进度
     var loadProgress: Float?
     // 仅在bufferingSomeSecond里面使用  表示正在缓冲中
@@ -118,6 +118,7 @@ class WFMusicPlayer: NSObject {
     var playProgress: Float = 0.0
     /// 是否正在播放
     var isPlay: Bool = false
+    
     /// 拖动进度条控制播放进度
     var sliderValue: Float = 0.0 {
         didSet {
@@ -129,6 +130,7 @@ class WFMusicPlayer: NSObject {
             }
         }
     }
+    
     /// 播放器的几种状态
     fileprivate var state = WFMusicPlayerState.notSetURL {
         didSet {
@@ -137,12 +139,14 @@ class WFMusicPlayer: NSObject {
             }
         }
     }
+    
     /// 总共时间
     var totalTime: CMTime? {
         get {
             return self.musicPlayer.currentItem?.duration
         }
     }
+    
     /// 当前播放时间
     var currentPlayTime: CMTime? {
         get {
@@ -151,10 +155,13 @@ class WFMusicPlayer: NSObject {
     }
     /// 应用是否进入后台
     var isEnterBackground : Bool = false
+    /// 播放前是否跳到 0
+    var seekToZeroBeforePlay : Bool = false
     /// 是否立即播放
     var isImmediately : Bool = false
     /// 后台播放申请ID
     var bgTaskId : UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier.invalid
+    
     /// 播放速度    改变播放速度
     var playSpeed : Float = 1.0 {
         didSet{
@@ -165,11 +172,11 @@ class WFMusicPlayer: NSObject {
             }
         }
     }
-    var imageView = UIImageView() //为了设置锁屏封面
-    
+    var imageView = UIImageView() // 为了设置锁屏封面
     
     
 }
+
 
 // MARK: -- 播放器基本方法 （停止、开始、下一首、上一首 等）
 extension WFMusicPlayer {
@@ -238,6 +245,47 @@ extension WFMusicPlayer {
         let music = self.musicArray[self.currentIndex]
         self.play(URL.init(string: music.musicUrl!)!)
     }
+    
+    /// 设置锁屏时 播放中心的播放信息
+    func setNowPlayingInfo() {
+    
+        if self.currentMData != nil {
+           
+            var info = Dictionary<String,Any>()
+            info[MPMediaItemPropertyTitle] = self.currentMData?.musicName ?? ""
+            
+            if let image = UIImage(named: "AppIcon") {
+                
+                let artwork = MPMediaItemArtwork.init(boundsSize: image.size, requestHandler: { (size) -> UIImage in
+                    
+                    return image
+                })
+                // 显示的图片
+                info[MPMediaItemPropertyArtwork] = artwork
+            }
+                
+    //            if  let url = self.currentScenicPoint?.pictureArray?.first ,let image = UIImage(named: "AppIcon"){
+    //                imageView.kf.setImage(with: URL(string:url), placeholder: image, options: nil, progressBlock: nil) { (img, _, _, _) in
+    //
+    //                    if
+    //                    info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(image:img)//显示的图片
+    //                }
+    //            }else{
+    //
+    //            }
+                
+                
+            info[MPMediaItemPropertyPlaybackDuration] = changeStringForTime(timeInterval: CMTimeGetSeconds(self.totalTime!))  //总时长
+            
+            if let duration = self.musicPlayer.currentItem?.currentTime() {
+                
+               info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(duration)
+            }
+            info[MPNowPlayingInfoPropertyPlaybackRate] = 1.0//播放速率
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        }
+    }
+        
     
     func currentPlayData() -> MusicData {
         
@@ -318,7 +366,13 @@ extension WFMusicPlayer {
                     }
                     else if item.status == AVPlayerItem.Status.readyToPlay  {
                         
-                        
+                        if isImmediately {
+                            
+                            self.play()
+                        } else {
+                            
+                            self.setNowPlayingInfo()
+                        }
                     }
                     else if item.status == AVPlayerItem.Status.unknown {
                                            
@@ -384,7 +438,7 @@ extension WFMusicPlayer {
         if type == AVAudioSession.InterruptionType.began {
             
             self.pause()
-        }else {
+        } else {
             guard  let options = info![AVAudioSessionInterruptionOptionKey] as? AVAudioSession.InterruptionOptions else {return}
             
             if(options == AVAudioSession.InterruptionOptions.shouldResume){
@@ -394,17 +448,16 @@ extension WFMusicPlayer {
     }
     
     /// 单个音频播放结束后的逻辑处理
-    @objc func playMusicFinished(){
+    @objc func playMusicFinished() {
         
         UIDevice.current.isProximityMonitoringEnabled = true
         self.seekToZeroBeforePlay = true
         self.isPlay = false
+        self.state = .end
         
-        self.updateCurrentPlayState(state: AVPlayerPlayState.AVPlayerPlayStateEnd)
-        
-        if (self.playType == WPY_AVPlayerType.PlayTypeSpecial) {
+        if (self.playerMode == .sequential) {
             
-            self.next()
+            self.playNext()
         }
     }
     

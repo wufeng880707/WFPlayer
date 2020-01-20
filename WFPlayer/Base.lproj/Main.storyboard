@@ -15,10 +15,13 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="MiL-xl-YG3">
-                                <rect key="frame" x="94" y="347" width="73" height="51"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="MiL-xl-YG3">
+                                <rect key="frame" x="80" y="323" width="73" height="51"/>
                                 <color key="backgroundColor" red="0.91372549020000005" green="0.52156862749999999" blue="0.2274509804" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="51" id="6zM-vp-7i5"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="73" id="CKx-Sz-bYR"/>
+                                </constraints>
                                 <state key="normal" title="开始">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </state>
@@ -26,34 +29,76 @@
                                     <action selector="startClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="HOz-lg-FE3"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2TN-WS-jVn">
-                                <rect key="frame" x="204" y="347" width="73" height="51"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="A9o-wI-ZXC">
+                                <rect key="frame" x="40" y="422" width="73" height="52"/>
                                 <color key="backgroundColor" red="0.91372549020000005" green="0.52156862749999999" blue="0.2274509804" alpha="1" colorSpace="calibratedRGB"/>
-                                <state key="normal" title="暂停">
-                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                </state>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="A9o-wI-ZXC">
-                                <rect key="frame" x="56" y="423" width="73" height="51"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" red="0.91372549020000005" green="0.52156862749999999" blue="0.2274509804" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="73" id="Ra2-3A-xac"/>
+                                </constraints>
                                 <state key="normal" title="上一首">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </state>
+                                <connections>
+                                    <action selector="previous:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Xba-cM-oHE"/>
+                                </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DeN-Dp-Rfz">
-                                <rect key="frame" x="249" y="423" width="73" height="51"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DeN-Dp-Rfz">
+                                <rect key="frame" x="301" y="422" width="73" height="52"/>
                                 <color key="backgroundColor" red="0.91372549020000005" green="0.52156862749999999" blue="0.2274509804" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="73" id="Skg-Bj-7Za"/>
+                                </constraints>
                                 <state key="normal" title="下一首">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </state>
+                                <connections>
+                                    <action selector="next:" destination="BYZ-38-t0r" eventType="touchUpInside" id="sFR-rc-fw6"/>
+                                </connections>
+                            </button>
+                            <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="BOg-KG-OzT">
+                                <rect key="frame" x="38" y="224" width="338" height="30"/>
+                            </slider>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2TN-WS-jVn">
+                                <rect key="frame" x="269" y="323" width="73" height="51"/>
+                                <color key="backgroundColor" red="0.91372549020000005" green="0.52156862749999999" blue="0.2274509804" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="73" id="raS-Ii-dFN"/>
+                                </constraints>
+                                <state key="normal" title="暂停">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <action selector="puse:" destination="BYZ-38-t0r" eventType="touchUpInside" id="60t-Uh-QCY"/>
+                                </connections>
                             </button>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="DeN-Dp-Rfz" firstAttribute="leading" secondItem="A9o-wI-ZXC" secondAttribute="trailing" constant="188" id="2vc-X7-SRb"/>
+                            <constraint firstItem="A9o-wI-ZXC" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="BOg-KG-OzT" secondAttribute="leading" id="A0G-Hi-lPL"/>
+                            <constraint firstItem="BOg-KG-OzT" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="40" id="JZP-u7-1fT"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="A9o-wI-ZXC" secondAttribute="bottom" constant="388" id="Keb-Vr-XSu"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="BOg-KG-OzT" secondAttribute="trailing" constant="40" id="NHK-YF-esC"/>
+                            <constraint firstItem="MiL-xl-YG3" firstAttribute="top" secondItem="2TN-WS-jVn" secondAttribute="top" id="Nih-kj-Zzh"/>
+                            <constraint firstItem="A9o-wI-ZXC" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="Q7K-b0-zId"/>
+                            <constraint firstItem="MiL-xl-YG3" firstAttribute="baseline" secondItem="2TN-WS-jVn" secondAttribute="firstBaseline" id="Si5-9G-AQn"/>
+                            <constraint firstItem="DeN-Dp-Rfz" firstAttribute="top" secondItem="2TN-WS-jVn" secondAttribute="bottom" constant="48" id="YJh-Fh-Sb8"/>
+                            <constraint firstItem="MiL-xl-YG3" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="aP8-6Z-Tlb"/>
+                            <constraint firstItem="BOg-KG-OzT" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="cOP-pv-Ift"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="2TN-WS-jVn" secondAttribute="trailing" constant="72" id="dIO-bz-bL0"/>
+                            <constraint firstItem="A9o-wI-ZXC" firstAttribute="top" secondItem="DeN-Dp-Rfz" secondAttribute="top" id="gFn-Bu-LOg"/>
+                            <constraint firstItem="A9o-wI-ZXC" firstAttribute="top" secondItem="MiL-xl-YG3" secondAttribute="bottom" constant="48" id="gic-17-ZBu"/>
+                            <constraint firstItem="BOg-KG-OzT" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="180" id="gzA-nK-jEg"/>
+                            <constraint firstItem="DeN-Dp-Rfz" firstAttribute="trailing" secondItem="BOg-KG-OzT" secondAttribute="trailing" id="ma2-7j-vNO"/>
+                            <constraint firstItem="A9o-wI-ZXC" firstAttribute="baseline" secondItem="DeN-Dp-Rfz" secondAttribute="firstBaseline" id="qy3-Mj-WWB"/>
+                            <constraint firstItem="2TN-WS-jVn" firstAttribute="leading" secondItem="MiL-xl-YG3" secondAttribute="trailing" constant="116" id="szC-Ss-lJg"/>
+                            <constraint firstItem="MiL-xl-YG3" firstAttribute="top" secondItem="BOg-KG-OzT" secondAttribute="bottom" constant="70" id="wbs-tR-ar2"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
+                    <connections>
+                        <outlet property="sliderView" destination="BOg-KG-OzT" id="ZWT-lv-awR"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
