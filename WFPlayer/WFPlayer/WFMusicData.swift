@@ -37,3 +37,47 @@ public struct MusicData {
         self.musicLyric     = lyric
     }
 }
+
+/**
+ 播放器播放状态 emun
+ 
+ - notSetURL:                           没有URL
+ - preparing:                              准备播放
+ - beigin:                                   开始播放
+ - playing:                                 正在播放
+ - pause:                                   播放暂停
+ - end:                                       播放结束
+ - bufferEmpty:                         没有缓存的数据供播放了
+ - bufferToKeepUp:                   有缓存的数据可以供播放
+ - seekToZeroBeforePlay:        播放器缓冲
+ - notPlay:                                 不能播放
+ - notKnow:                               未知情况
+ */
+public enum WFMusicPlayerState {
+    
+    case notSetURL
+    case preparing
+    case beigin
+    case playing
+    case pause
+    case end
+    case bufferEmpty
+    case bufferToKeepUp
+    case seekToZeroBeforePlay
+    case notPlay
+    case notKnow
+}
+
+/**
+播放器播放方式
+
+- sequential:        顺序播放
+- random:           随机播放
+- single:               单曲循环
+*/
+public enum WFMusicPlayerMode {
+    
+    case sequential
+    case random
+    case single
+}

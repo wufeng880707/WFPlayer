@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7364308C23D016D8008BEF13 /* WFMusicData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7364308B23D016D8008BEF13 /* WFMusicData.swift */; };
+		738359A223D54E2300249B5B /* WFMusicPlayerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738359A123D54E2300249B5B /* WFMusicPlayerProtocol.swift */; };
 		73A7A7A823C855DA00626A4D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A7A7A723C855DA00626A4D /* AppDelegate.swift */; };
 		73A7A7AA23C855DA00626A4D /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A7A7A923C855DA00626A4D /* SceneDelegate.swift */; };
 		73A7A7AC23C855DA00626A4D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A7A7AB23C855DA00626A4D /* ViewController.swift */; };
@@ -38,6 +39,7 @@
 
 /* Begin PBXFileReference section */
 		7364308B23D016D8008BEF13 /* WFMusicData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WFMusicData.swift; sourceTree = "<group>"; };
+		738359A123D54E2300249B5B /* WFMusicPlayerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WFMusicPlayerProtocol.swift; sourceTree = "<group>"; };
 		73A7A7A423C855DA00626A4D /* WFPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WFPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		73A7A7A723C855DA00626A4D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		73A7A7A923C855DA00626A4D /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -138,6 +140,7 @@
 			children = (
 				73A7A7DA23C85F5A00626A4D /* WFMusicPlayer.swift */,
 				7364308B23D016D8008BEF13 /* WFMusicData.swift */,
+				738359A123D54E2300249B5B /* WFMusicPlayerProtocol.swift */,
 			);
 			path = WFPlayer;
 			sourceTree = "<group>";
@@ -278,6 +281,7 @@
 				73A7A7DB23C85F5A00626A4D /* WFMusicPlayer.swift in Sources */,
 				73A7A7A823C855DA00626A4D /* AppDelegate.swift in Sources */,
 				73A7A7AA23C855DA00626A4D /* SceneDelegate.swift in Sources */,
+				738359A223D54E2300249B5B /* WFMusicPlayerProtocol.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
