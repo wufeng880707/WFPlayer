@@ -37,7 +37,7 @@ class WFMusicPlayer: NSObject {
     var currentIndex: Int = 0
     /// 当前播放歌曲的加载进度
     var loadProgress: Float?
-    // 仅在bufferingSomeSecond里面使用  表示正在缓冲中
+    /// 仅在bufferingSomeSecond里面使用  表示正在缓冲中
     fileprivate var isBuffering = false
     /// 当前歌曲播放时间字符串
     var startTimeStr: String?
@@ -47,6 +47,8 @@ class WFMusicPlayer: NSObject {
     var playProgress: Float = 0.0
     /// 是否正在播放
     var isPlay: Bool = false
+    /// 是否正在拖动slide  调整播放时间
+    var isSeekingToTime: Bool = false
     
     /// 拖动进度条控制播放进度
     var sliderValue: Float = 0.0 {
@@ -101,7 +103,8 @@ class WFMusicPlayer: NSObject {
             }
         }
     }
-    var imageView = UIImageView() // 为了设置锁屏封面
+    /// 为了设置锁屏封面
+    var imageView = UIImageView()
     
     
 }
@@ -112,7 +115,28 @@ extension WFMusicPlayer {
 
     /// 开始播放通过
     /// - Parameter url: 文件地址
-    func play(_ url:URL) {
+    func play(url: String!, isImmediately: Bool = false) {
+        
+        self.isImmediately = isImmediately
+        playBase(URL.init(string: url)!)
+    }
+    
+    func play(dataArray: [MusicData], isImmediately: Bool = false) {
+        
+        self.isImmediately = isImmediately
+        self.musicArray = dataArray
+        self.currentMData = self.musicArray.first
+        playBase(URL.init(string: self.currentMData!.musicUrl!)!)
+    }
+    
+    func play(data: MusicData, isImmediately: Bool = false) {
+        
+        self.musicArray.append(data)
+        self.currentMData = data
+        playBase(URL.init(string: self.currentMData!.musicUrl!)!)
+    }
+    
+    fileprivate func playBase(_ url: URL) {
         
         self.removeObserver()
         self.urlAsset = AVURLAsset(url: url)
@@ -126,6 +150,7 @@ extension WFMusicPlayer {
             delegate?.wfMusicPlayer(playerCurrentPlayData: self.musicArray[self.currentIndex])
         }
     }
+    
     
     /// 开始播放
     func play() {
@@ -154,7 +179,7 @@ extension WFMusicPlayer {
             self.currentIndex = self.currentIndex - 1
         }
         let music = self.musicArray[self.currentIndex]
-        self.play(URL.init(string: music.musicUrl!)!)
+        self.playBase(URL.init(string: music.musicUrl!)!)
     }
     
     func playNext() {
@@ -172,7 +197,7 @@ extension WFMusicPlayer {
             }
         }
         let music = self.musicArray[self.currentIndex]
-        self.play(URL.init(string: music.musicUrl!)!)
+        self.playBase(URL.init(string: music.musicUrl!)!)
     }
     
     /// 设置锁屏时 播放中心的播放信息
@@ -241,7 +266,59 @@ extension WFMusicPlayer {
 // MARK: -- 系统想状态改变时处理方法
 extension WFMusicPlayer {
     
+    /// 监测是否靠近耳朵  转换声音播放模式
+    @objc fileprivate func sensorStateChange() {
+        
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0) {
+            
+            if UIDevice.current.proximityState == true {
+                
+                // 靠近耳朵
+                do {
+                    try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playAndRecord, mode: .default, options: [])
+                } catch { }
+            }else {
+                
+                // 远离耳朵
+                do {
+                    try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback, mode: .default, options: [])
+                } catch { }
+            }
+        }
+    }
     
+    /// 处理播放音频是被来电 或者 其他 打断音频的处理
+    /// - Parameter sender: NSNotification
+    @objc fileprivate func handleInterreption(sender: NSNotification) {
+        
+        let info = sender.userInfo
+        guard let type : AVAudioSession.InterruptionType =  info?[AVAudioSessionInterruptionTypeKey] as? AVAudioSession.InterruptionType else { return }
+        
+        if type == AVAudioSession.InterruptionType.began {
+            
+            self.pause()
+        } else {
+            guard  let options = info![AVAudioSessionInterruptionOptionKey] as? AVAudioSession.InterruptionOptions else {return}
+            
+            if(options == AVAudioSession.InterruptionOptions.shouldResume){
+                self.pause()
+            }
+        }
+    }
+    
+    /// 单个音频播放结束后的逻辑处理
+    @objc func playMusicFinished() {
+        
+        UIDevice.current.isProximityMonitoringEnabled = true
+        self.seekToZeroBeforePlay = true
+        self.isPlay = false
+        self.state = .end
+        
+        if (self.playerMode == .sequential) {
+            
+            self.playNext()
+        }
+    }
 }
 
 // MARK: -- 通知、kvo 监听 AVPlayerItem属性变化
@@ -268,6 +345,24 @@ extension WFMusicPlayer {
             
             // 监控播放结束通知
             NotificationCenter.default.addObserver(self, selector: #selector(playMusicFinished), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.musicPlayer.currentItem)
+            
+            /// 监控播放进度
+            self.timeObserVer = self.musicPlayer.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1, preferredTimescale: 1), queue: DispatchQueue.main) { [weak self] (time) in
+                
+                guard let `self` = self else { return }
+
+                let currentTime = CMTimeGetSeconds(time)
+                self.playProgress = Float(currentTime)
+                
+                if self.isSeekingToTime {
+                    return
+                }
+                let total =  Float(CMTimeGetSeconds(self.totalTime!))
+                
+                if total > 0 {
+                    self.delegate?.wfMusicPlayer(updateProgress: Float(currentTime) / Float(total), currentTime: currentTime, currentTimeStr: self.changeStringForTime(timeInterval: currentTime))
+                }
+            }
         }
     }
         
@@ -281,6 +376,11 @@ extension WFMusicPlayer {
         NotificationCenter.default.removeObserver(self, name:UIDevice.proximityStateDidChangeNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name:AVAudioSession.interruptionNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+        
+        if(self.timeObserVer != nil) {
+            
+            self.musicPlayer.removeTimeObserver(self.timeObserVer!)
+        }
     }
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
@@ -339,59 +439,6 @@ extension WFMusicPlayer {
         }
     }
     
-    /// 监测是否靠近耳朵  转换声音播放模式
-    @objc fileprivate func sensorStateChange() {
-        
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0) {
-            
-            if UIDevice.current.proximityState == true {
-                
-                // 靠近耳朵
-                do {
-                    try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playAndRecord, mode: .default, options: [])
-                } catch { }
-            }else {
-                
-                // 远离耳朵
-                do {
-                    try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback, mode: .default, options: [])
-                } catch { }
-            }
-        }
-    }
-    
-    /// 处理播放音频是被来电 或者 其他 打断音频的处理
-    /// - Parameter sender: NSNotification
-    @objc fileprivate func handleInterreption(sender: NSNotification) {
-        
-        let info = sender.userInfo
-        guard let type : AVAudioSession.InterruptionType =  info?[AVAudioSessionInterruptionTypeKey] as? AVAudioSession.InterruptionType else { return }
-        
-        if type == AVAudioSession.InterruptionType.began {
-            
-            self.pause()
-        } else {
-            guard  let options = info![AVAudioSessionInterruptionOptionKey] as? AVAudioSession.InterruptionOptions else {return}
-            
-            if(options == AVAudioSession.InterruptionOptions.shouldResume){
-                self.pause()
-            }
-        }
-    }
-    
-    /// 单个音频播放结束后的逻辑处理
-    @objc func playMusicFinished() {
-        
-        UIDevice.current.isProximityMonitoringEnabled = true
-        self.seekToZeroBeforePlay = true
-        self.isPlay = false
-        self.state = .end
-        
-        if (self.playerMode == .sequential) {
-            
-            self.playNext()
-        }
-    }
     
     /// 缓冲进度
     fileprivate func availableDuration() -> TimeInterval? {

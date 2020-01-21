@@ -37,7 +37,7 @@ class ViewController: UIViewController {
 //
 //        var musicDataList = [MusicData]()
 //
-        let musicD = MusicData(url: "http://m10.music.126.net/20200120113758/f0da4f5c1e02f7ae87bc9b53ed5061ef/ymusic/565f/0508/075b/a53a61abbe2b42e2787b011b3d06abbb.mp3", name: "haha", singer: "我", album: "不知道", image: "http://p1.music.126.net/Ox7lGtp0WmTNJP-6nbpqIw==/2852133162457596.jpg", lyric: "")
+        let musicD = MusicData(url: "http://m10.music.126.net/20200121181640/579f568445a80261b8aeaa4020160a66/ymusic/b1c4/b5de/74d0/9158ae4873e10b743790320db9ef9b29.mp3", name: "haha", singer: "我", album: "不知道", image: "http://p1.music.126.net/Ox7lGtp0WmTNJP-6nbpqIw==/2852133162457596.jpg", lyric: "")
 //
 //        musicDataList.append(musicD)
 //
@@ -51,7 +51,7 @@ class ViewController: UIViewController {
         let musicPlayer = WFMusicPlayer.sharedInstance
         musicPlayer.delegate = self
         musicPlayer.isImmediately = true
-        musicPlayer.play(URL.init(string: musicD.musicUrl!)!)
+        musicPlayer.play(data: musicD, isImmediately: true)
     }
     
     
@@ -67,7 +67,7 @@ extension ViewController: WFMusicPlayerProtocol {
     
     func wfMusicPlayer(updateProgress progress: Float, currentTime: TimeInterval, currentTimeStr: String?) {
         
-        print(progress)
+        print(currentTimeStr ?? "")
     }
     
     func wfMusicPlayer(updateLoadProgress progress: Float, duration: TimeInterval, totalTime: String?) {
